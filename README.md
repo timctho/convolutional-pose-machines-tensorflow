@@ -1,3 +1,30 @@
 # Convolutional Pose Machines - Tensorflow
+========================================================
 
-![image](https://github.com/timctho/ConvolutionalPoseMachines-Tensorflow/blob/master/cpm_hand.gif)
+<p align="center">
+    <img src="https://github.com/timctho/ConvolutionalPoseMachines-Tensorflow/raw/master/cpm_hand.gif", width="480">
+</p>
+
+This is the **Tensorflow** implementation of [Convolutional Pose Machines](https://github.com/shihenw/convolutional-pose-machines-release), one of the state-of-the-art models for **2D body and hand pose estimation**.
+
+## With some additional features:
+ - Easy multi-stage graph construction
+ - Kalman filters for smooth pose estimation
+
+## How to start
+### Download models
+Put downloaded models in the **models/weights** folder.
+ - Body Pose Model(https://drive.google.com/open?id=0Bx1hAYkcBwqnX01MN3hoUk1kUjA)
+ - Hand Pose Model(https://drive.google.com/open?id=0Bx1hAYkcBwqnSU9lSm5Ya3B1VTg)
+
+### Run demo scripts
+There are two scripts, **demo_cpm_body.py** for body pose estimation and **demo_cpm_hand.py** for hand pose estimation. I take **demo_cpm_hand.py** for example.
+
+First set the **DEMO_TYPE**. If you want to pass an image, then put the path to image here. If you want a live demo through a webcam, there are few options. **MULTI** will show multiple stages output heatmaps and the final pose estimation simultaneously. **SINGLE** will only show the final pose estimation. **HM** will show each joint heatmap of last stage separately.
+
+### Build your own model
+See **models/nets** for model definition, I take **models/nets/cpm_hand.py** for example.
+ - Create a model instance
+ - Set how many stages you want the model to have (at least 2)
+ - Call **build_loss** if you want to do the training
+ - Use **self.train_op** to optimize the model
