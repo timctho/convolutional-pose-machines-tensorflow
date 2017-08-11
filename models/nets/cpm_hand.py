@@ -1,6 +1,5 @@
 import tensorflow as tf
 import pickle
-import numpy as np
 
 
 class CPM_Model(object):
