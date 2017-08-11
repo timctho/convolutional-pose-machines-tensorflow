@@ -40,3 +40,6 @@ See **models/nets** for model definition, I take **models/nets/cpm_hand.py** for
  - Set how many stages you want the model to have (at least 2)
  - Call **build_loss** if you want to do the training
  - Use **self.train_op** to optimize the model
+
+Please see **train.py** for an example.
+
