@@ -6,6 +6,7 @@ import cv2
 M_PI = 3.14159
 
 
+# Compute gaussian kernel for input image
 def gaussian_img(img_height, img_width, c_x, c_y, variance):
     gaussian_map = np.zeros((img_height, img_width))
     for x_p in range(img_width):
@@ -24,6 +25,13 @@ def read_image(file, cam, boxsize, type):
     # from webcam
     elif type == 'WEBCAM':
         _, oriImg = cam.read()
+    # from video
+    elif type == 'VIDEO':
+        oriImg = cv2.cvtColor(file, cv2.COLOR_BGR2RGB)
+
+    if oriImg is None:
+        print('oriImg is None')
+        return None
 
     scale = boxsize / (oriImg.shape[0] * 1.0)
     imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4)
@@ -32,9 +40,11 @@ def read_image(file, cam, boxsize, type):
 
     if imageToTest.shape[1] < boxsize:
         offset = imageToTest.shape[1] % 2
+        # make the origin image be the center
         output_img[:, int(boxsize / 2 - math.ceil(imageToTest.shape[1] / 2)):int(
             boxsize / 2 + math.ceil(imageToTest.shape[1] / 2) - offset), :] = imageToTest
     else:
+        # crop the center of the origin image
         output_img = imageToTest[:,
                      int(imageToTest.shape[1] / 2 - boxsize / 2):int(imageToTest.shape[1] / 2 + boxsize / 2), :]
     return output_img
