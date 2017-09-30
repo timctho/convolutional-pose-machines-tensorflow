@@ -31,6 +31,8 @@ If you want a live demo through a webcam, there are few options.
  - **SINGLE** will only show the final pose estimation. 
  - **HM** will show each joint heatmap of last stage separately.
 
+You can also use video files like '.avi', '.mp4', '.flv'.
+
 The CPM structure assumes the body or hand you want to estimate is **located in the middle** of the frame.
 If you want to avoid that, one way is to add a detector at the begining, and feed the detected bounding box image into this model.
 
