@@ -4,7 +4,7 @@ import cv2
 
 
 from utils import cpm_utils, tf_utils
-from models.nets import cpm_hand, cpm_body
+from models.nets import cpm_hand_slim, cpm_body_slim
 
 
 """Hyper Parameters
@@ -14,7 +14,7 @@ tf.app.flags.DEFINE_string('tfr_data_files',
                            default_value=['./train_128x128.tfrecords'],
                            docstring='Training data tfrecords')
 tf.app.flags.DEFINE_string('pretrained_model',
-                           default_value='cpm_hand.pkl',
+                           default_value='cpm_body.pkl',
                            docstring='Pretrained mode')
 tf.app.flags.DEFINE_integer('input_size',
                             default_value=128,
@@ -29,7 +29,7 @@ tf.app.flags.DEFINE_integer('center_radius',
                             default_value=21,
                             docstring='Center map gaussian variance')
 tf.app.flags.DEFINE_integer('num_of_joints',
-                            default_value=21,
+                            default_value=14,
                             docstring='Number of joints')
 tf.app.flags.DEFINE_integer('batch_size',
                             default_value=32,
@@ -47,19 +47,19 @@ tf.app.flags.DEFINE_integer('lr_decay_step',
                             default_value=20000,
                             docstring='Learning rate decay steps')
 tf.app.flags.DEFINE_string('saved_model_name',
-                           default_value='_cpm_hand_i' + str(FLAGS.input_size) + 'x' + str(
+                           default_value='_cpm_body_i' + str(FLAGS.input_size) + 'x' + str(
                                FLAGS.input_size) + '_o' + str(FLAGS.heatmap_size) + \
                                          'x' + str(FLAGS.heatmap_size) + '_' + str(
                                FLAGS.stages) + 's',
                            docstring='Saved model name')
 tf.app.flags.DEFINE_string('log_file_name',
-                           default_value='_cpm_hand_i' + str(FLAGS.input_size) + 'x' + str(
+                           default_value='_cpm_body_i' + str(FLAGS.input_size) + 'x' + str(
                                FLAGS.input_size) + '_o' + str(FLAGS.heatmap_size) + \
                                          'x' + str(FLAGS.heatmap_size) + '_' + str(
                                FLAGS.stages) + 's',
                            docstring='Log file name')
 tf.app.flags.DEFINE_string('log_dir',
-                           default_value='logs/_cpm_hand_i' + str(FLAGS.input_size) + 'x' + str(
+                           default_value='logs/_cpm_body_i' + str(FLAGS.input_size) + 'x' + str(
                                FLAGS.input_size) + '_o' + str(FLAGS.heatmap_size) + \
                                          'x' + str(FLAGS.heatmap_size) + '_' + str(
                                FLAGS.stages) + 's',
@@ -85,10 +85,14 @@ def main(argv):
                                            name='input_placeholer')
     cmap_placeholder = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.input_size, FLAGS.input_size, 1),
                                       name='cmap_placeholder')
-    hmap_placeholder = tf.placeholder(dtype=tf.float32, shape=(
-    FLAGS.batch_size, FLAGS.heatmap_size, FLAGS.heatmap_size, FLAGS.num_of_joints + 1), name='hmap_placeholder')
+    hmap_placeholder = tf.placeholder(dtype=tf.float32,
+                                      shape=(FLAGS.batch_size,
+                                             FLAGS.heatmap_size,
+                                             FLAGS.heatmap_size,
+                                             FLAGS.num_of_joints + 1),
+                                      name='hmap_placeholder')
 
-    model = cpm_hand.CPM_Model(FLAGS.stages, FLAGS.num_of_joints + 1)
+    model = cpm_body_slim.CPM_Model(FLAGS.stages, FLAGS.num_of_joints + 1)
     model.build_model(input_placeholder, cmap_placeholder, FLAGS.batch_size)
     model.build_loss(hmap_placeholder, FLAGS.lr, FLAGS.lr_decay_rate, FLAGS.lr_decay_step)
     print('=====Model Build=====\n')
