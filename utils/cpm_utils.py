@@ -38,15 +38,17 @@ def read_image(file, cam, boxsize, type):
 
     output_img = np.ones((boxsize, boxsize, 3)) * 128
 
-    if imageToTest.shape[1] < boxsize:
-        offset = imageToTest.shape[1] % 2
+    img_h = imageToTest.shape[0]
+    img_w = imageToTest.shape[1]
+    if img_w < boxsize:
+        offset = img_w % 2
         # make the origin image be the center
-        output_img[:, int(boxsize / 2 - math.ceil(imageToTest.shape[1] / 2)):int(
-            boxsize / 2 + math.ceil(imageToTest.shape[1] / 2) - offset), :] = imageToTest
+        output_img[:, int(boxsize / 2 - math.floor(img_w / 2)):int(
+            boxsize / 2 + math.floor(img_w / 2) + offset), :] = imageToTest
     else:
         # crop the center of the origin image
         output_img = imageToTest[:,
-                     int(imageToTest.shape[1] / 2 - boxsize / 2):int(imageToTest.shape[1] / 2 + boxsize / 2), :]
+                     int(img_w / 2 - boxsize / 2):int(img_w / 2 + boxsize / 2), :]
     return output_img
 
 
@@ -99,6 +101,27 @@ def make_gaussian_batch(heatmaps, size, fwhm):
             batch_datum[data_num, :, :, 0:heatmaps.shape[3] - 1], axis=2)
 
     return batch_datum
+
+
+def make_heatmaps_from_joints(input_size, heatmap_size, gaussian_variance, batch_joints):
+    # Generate ground-truth heatmaps from ground-truth 2d joints
+    scale_factor = input_size // heatmap_size
+    batch_gt_heatmap_np = []
+    for i in range(batch_joints.shape[0]):
+        gt_heatmap_np = []
+        invert_heatmap_np = np.ones(shape=(heatmap_size, heatmap_size))
+        for j in range(batch_joints.shape[1]):
+            cur_joint_heatmap = make_gaussian(heatmap_size,
+                                              gaussian_variance,
+                                              center=(batch_joints[i][j] // scale_factor))
+            gt_heatmap_np.append(cur_joint_heatmap)
+            invert_heatmap_np -= cur_joint_heatmap
+        gt_heatmap_np.append(invert_heatmap_np)
+        batch_gt_heatmap_np.append(gt_heatmap_np)
+    batch_gt_heatmap_np = np.asarray(batch_gt_heatmap_np)
+    batch_gt_heatmap_np = np.transpose(batch_gt_heatmap_np, (0, 2, 3, 1))
+
+    return batch_gt_heatmap_np
 
 
 def rad2Deg(rad):
