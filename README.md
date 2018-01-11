@@ -55,3 +55,6 @@ See **models/nets** for model definition, I take **models/nets/cpm_hand.py** for
 
 Please see **train.py** for an example.
 
+## License
+
+This project is licensed under the Apache 2.0 License.
