@@ -44,7 +44,7 @@ tf.app.flags.DEFINE_integer('cam_num',
 tf.app.flags.DEFINE_bool('KALMAN_ON',
                          default_value=True,
                          docstring='enalbe kalman filter')
-tf.app.flags.DEFINE_integer('kalman_noise',
+tf.app.flags.DEFINE_float('kalman_noise',
                             default_value=3e-2,
                             docstring='Kalman filter noise value')
 tf.app.flags.DEFINE_string('color_channel',
