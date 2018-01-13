@@ -6,28 +6,29 @@ import importlib
 import time
 
 from utils import cpm_utils
+from config import FLAGS
+import Ensemble_data_generator
 
-from Cam_bridge_data_generator import Cam_bridge_data_generator_2D as DataGenerator
-from utils.ConfigParser import ConfigParser
+cpm_model = importlib.import_module('models.nets.' + FLAGS.network_def)
 
-FLAGS = ConfigParser('config')
-cpm_model = importlib.import_module('models.nets.'+FLAGS.network_def)
 
 def main(argv):
-
     """
 
     :param argv:
     :return:
     """
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     """ Create dirs for saving models and logs
     """
-    model_path_suffix = os.path.join('input_{}_output_{}'.format(FLAGS.input_size, FLAGS.heatmap_size),
-                                      'joints_{}'.format(FLAGS.num_of_joints),
-                                      'stages_{}'.format(FLAGS.cpm_stages),
-                                      'init_{}_rate_{}_step_{}'.format(FLAGS.init_lr, FLAGS.lr_decay_rate, FLAGS.lr_decay_step)
-                                      )
+    model_path_suffix = os.path.join(FLAGS.network_def,
+                                     'input_{}_output_{}'.format(FLAGS.input_size, FLAGS.heatmap_size),
+                                     'joints_{}'.format(FLAGS.num_of_joints),
+                                     'stages_{}'.format(FLAGS.cpm_stages),
+                                     'init_{}_rate_{}_step_{}'.format(FLAGS.init_lr, FLAGS.lr_decay_rate,
+                                                                      FLAGS.lr_decay_step)
+                                     )
     model_save_dir = os.path.join('models',
                                   'weights',
                                   model_path_suffix)
@@ -36,21 +37,23 @@ def main(argv):
                                       model_path_suffix,
                                       'train')
     test_log_save_dir = os.path.join('models',
-                                      'logs',
-                                      model_path_suffix,
-                                      'test')
+                                     'logs',
+                                     model_path_suffix,
+                                     'test')
     os.system('mkdir -p {}'.format(model_save_dir))
     os.system('mkdir -p {}'.format(train_log_save_dir))
     os.system('mkdir -p {}'.format(test_log_save_dir))
 
-
     """ Create data generator
     """
-    train_data_generator = DataGenerator(FLAGS.train_img_dir, FLAGS.bg_img_dir, FLAGS.input_size, shuffle_data=True)
-    batch_train_data_generator = train_data_generator.batch_data_generator(FLAGS.batch_size, repeat=True)
-
-    val_data_generator = DataGenerator(FLAGS.val_img_dir, FLAGS.bg_img_dir, FLAGS.input_size, shuffle_data=False)
-
+    g = Ensemble_data_generator.ensemble_data_generator(FLAGS.train_img_dir,
+                                                        FLAGS.bg_img_dir,
+                                                        FLAGS.batch_size, FLAGS.input_size, True, True,
+                                                        FLAGS.augmentation_config, FLAGS.hnm, FLAGS.do_cropping)
+    g_eval = Ensemble_data_generator.ensemble_data_generator(FLAGS.val_img_dir,
+                                                             FLAGS.bg_img_dir,
+                                                             FLAGS.batch_size, FLAGS.input_size, True, True,
+                                                             FLAGS.augmentation_config, FLAGS.hnm, FLAGS.do_cropping)
 
     """ Build network graph
     """
@@ -64,7 +67,6 @@ def main(argv):
     print('=====Model Build=====\n')
 
     merged_summary = tf.summary.merge_all()
-
 
     """ Training
     """
@@ -94,7 +96,7 @@ def main(argv):
                         print(variable.name, np.mean(sess.run(var)))
 
             else:
-                saver.restore(sess, FLAGS.pretrained_model)
+                saver.restore(sess, os.path.join(model_save_dir, FLAGS.pretrained_model))
 
                 # check weights
                 for variable in tf.trainable_variables():
@@ -106,7 +108,7 @@ def main(argv):
             t1 = time.time()
 
             # Read one batch data
-            batch_x_np, batch_joints_np = batch_train_data_generator.next()
+            batch_x_np, batch_joints_np = g.next()
 
             if FLAGS.normalize_img:
                 # Normalize images
@@ -140,7 +142,7 @@ def main(argv):
             train_writer.add_summary(summaries, global_step)
 
             # Draw intermediate results
-            if (global_step +1) % 10 == 0:
+            if (global_step + 1) % 10 == 0:
                 if FLAGS.color_channel == 'GRAY':
                     demo_img = np.repeat(batch_x_np[0], 3, axis=2)
                     if FLAGS.normalize_img:
@@ -177,7 +179,10 @@ def main(argv):
                 if FLAGS.cpm_stages > 4:
                     upper_img = np.concatenate((demo_stage_heatmaps[0], demo_stage_heatmaps[1], demo_stage_heatmaps[2]),
                                                axis=1)
-                    blend_img = 1.0 * demo_img / 255.0  #+ 0.5 * demo_gt_heatmap
+                    if FLAGS.normalize_img:
+                        blend_img = 0.5 * demo_img + 0.5 * demo_gt_heatmap
+                    else:
+                        blend_img = 0.5 * demo_img / 255.0 + 0.5 * demo_gt_heatmap
                     lower_img = np.concatenate((demo_stage_heatmaps[FLAGS.cpm_stages - 1], demo_gt_heatmap, blend_img),
                                                axis=1)
                     demo_img = np.concatenate((upper_img, lower_img), axis=0)
@@ -192,8 +197,9 @@ def main(argv):
             if (global_step + 1) % FLAGS.validation_iters == 0:
                 mean_val_loss = 0
                 cnt = 0
-                batch_val_data_generator = val_data_generator.batch_data_generator(FLAGS.batch_size, repeat=False)
-                for batch_x_np, batch_joints_np in batch_val_data_generator:
+
+                while cnt < 10:
+                    batch_x_np, batch_joints_np = g_eval.next()
                     # Normalize images
                     batch_x_np = batch_x_np / 255.0 - 0.5
 
@@ -207,12 +213,13 @@ def main(argv):
                     mean_val_loss += total_loss_np
                     cnt += 1
 
-                print('\nValidation loss: {:>7.2f}\n'.format(total_loss_np))
+                print('\nValidation loss: {:>7.2f}\n'.format(mean_val_loss / cnt))
                 test_writer.add_summary(summaries, global_step)
 
             # Save models
             if (global_step + 1) % FLAGS.model_save_iters == 0:
-                saver.save(sess=sess, save_path=model_save_dir+'/'+FLAGS.network_def.split('.py')[0], global_step=(global_step+1))
+                saver.save(sess=sess, save_path=model_save_dir + '/' + FLAGS.network_def.split('.py')[0],
+                           global_step=(global_step + 1))
                 print('\nModel checkpoint saved...\n')
 
             # Finish training
@@ -222,11 +229,13 @@ def main(argv):
 
 
 def print_current_training_stats(global_step, cur_lr, stage_losses, total_loss, time_elapsed):
-    stats = 'Step: {}/{} ----- Cur_lr: {:1.7f} ----- Time: {:>2.2f} sec.'.format(global_step, FLAGS.training_iters, cur_lr, time_elapsed)
-    losses = ' | '.join(['S{} loss: {:>7.2f}'.format(stage_num+1, stage_losses[stage_num]) for stage_num in range(FLAGS.cpm_stages)])
+    stats = 'Step: {}/{} ----- Cur_lr: {:1.7f} ----- Time: {:>2.2f} sec.'.format(global_step, FLAGS.training_iters,
+                                                                                 cur_lr, time_elapsed)
+    losses = ' | '.join(
+        ['S{} loss: {:>7.2f}'.format(stage_num + 1, stage_losses[stage_num]) for stage_num in range(FLAGS.cpm_stages)])
     losses += ' | Total loss: {}'.format(total_loss)
     print(stats)
-    print(losses+'\n')
+    print(losses + '\n')
 
 
 if __name__ == '__main__':
