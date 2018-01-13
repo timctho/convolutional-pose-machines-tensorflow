@@ -27,7 +27,7 @@ Tracking support for single hand.
 Put downloaded models in the **models/weights** folder.
  - [Body Pose Model](https://drive.google.com/open?id=0Bx1hAYkcBwqnX01MN3hoUk1kUjA)
  - [Hand Pose Model (.pkl)](https://drive.google.com/open?id=0Bx1hAYkcBwqnSU9lSm5Ya3B1VTg)
- - [Hand Pose Model (tf)]()
+ - [Hand Pose Model (tf)](https://drive.google.com/open?id=1gOwBY5puCusYPCQaPcEUMmQtPnGHCPyl)
 
 ### Run demo scripts
 **demo_cpm_body.py** for body pose estimation and **demo_cpm_hand.py** for hand pose estimation. 
