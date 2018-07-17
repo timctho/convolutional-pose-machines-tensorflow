@@ -2,7 +2,7 @@
 # ======================================================
 
 import tensorflow as tf
-from models.nets import cpm_hand
+from models.nets import cpm_hand_slim
 import numpy as np
 from utils import cpm_utils
 import cv2
@@ -103,7 +103,7 @@ def main(argv):
         center_map = tf.placeholder(dtype=tf.float32, shape=[None, FLAGS.input_size, FLAGS.input_size, 1],
                                     name='center_map')
 
-        model = cpm_hand.CPM_Model(FLAGS.stages, FLAGS.joints + 1)
+        model = cpm_hand_slim.CPM_Model(FLAGS.stages, FLAGS.joints + 1)
         model.build_model(input_data, center_map, 1)
 
     saver = tf.train.Saver()
