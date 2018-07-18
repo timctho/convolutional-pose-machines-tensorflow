@@ -125,8 +125,8 @@ class CPM_Model(object):
             ## Pre stage conv
             # conv1
             for layer in range(1, 3):
-                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer) + '/kernel')
-                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer) + '/bias')
+                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer) + '/weights')
+                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer) + '/biases')
 
                 loaded_kernel = weights['conv1_' + str(layer)]
                 loaded_bias = weights['conv1_' + str(layer) + '_b']
@@ -136,8 +136,8 @@ class CPM_Model(object):
 
             # conv2
             for layer in range(1, 3):
-                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 2) + '/kernel')
-                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 2) + '/bias')
+                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 2) + '/weights')
+                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 2) + '/biases')
 
                 loaded_kernel = weights['conv2_' + str(layer)]
                 loaded_bias = weights['conv2_' + str(layer) + '_b']
@@ -147,8 +147,8 @@ class CPM_Model(object):
 
             # conv3
             for layer in range(1, 5):
-                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 4) + '/kernel')
-                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 4) + '/bias')
+                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 4) + '/weights')
+                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 4) + '/biases')
 
                 loaded_kernel = weights['conv3_' + str(layer)]
                 loaded_bias = weights['conv3_' + str(layer) + '_b']
@@ -158,8 +158,8 @@ class CPM_Model(object):
 
             # conv4
             for layer in range(1, 5):
-                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 8) + '/kernel')
-                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 8) + '/bias')
+                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 8) + '/weights')
+                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 8) + '/biases')
 
                 loaded_kernel = weights['conv4_' + str(layer)]
                 loaded_bias = weights['conv4_' + str(layer) + '_b']
@@ -169,8 +169,8 @@ class CPM_Model(object):
 
             # conv5
             for layer in range(1, 3):
-                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 12) + '/kernel')
-                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 12) + '/bias')
+                conv_kernel = tf.get_variable('sub_stages/sub_conv' + str(layer + 12) + '/weights')
+                conv_bias = tf.get_variable('sub_stages/sub_conv' + str(layer + 12) + '/biases')
 
                 loaded_kernel = weights['conv5_' + str(layer)]
                 loaded_bias = weights['conv5_' + str(layer) + '_b']
@@ -179,8 +179,8 @@ class CPM_Model(object):
                 sess.run(tf.assign(conv_bias, loaded_bias))
 
             # conv5_3_CPM
-            conv_kernel = tf.get_variable('sub_stages/sub_stage_img_feature/kernel')
-            conv_bias = tf.get_variable('sub_stages/sub_stage_img_feature/bias')
+            conv_kernel = tf.get_variable('sub_stages/sub_stage_img_feature/weights')
+            conv_bias = tf.get_variable('sub_stages/sub_stage_img_feature/biases')
 
             loaded_kernel = weights['conv5_3_CPM']
             loaded_bias = weights['conv5_3_CPM_b']
@@ -189,8 +189,8 @@ class CPM_Model(object):
             sess.run(tf.assign(conv_bias, loaded_bias))
 
             ## stage 1
-            conv_kernel = tf.get_variable('stage_1/conv1/kernel')
-            conv_bias = tf.get_variable('stage_1/conv1/bias')
+            conv_kernel = tf.get_variable('stage_1/conv1/weights')
+            conv_bias = tf.get_variable('stage_1/conv1/biases')
 
             loaded_kernel = weights['conv6_1_CPM']
             loaded_bias = weights['conv6_1_CPM_b']
@@ -199,8 +199,8 @@ class CPM_Model(object):
             sess.run(tf.assign(conv_bias, loaded_bias))
 
             if finetune != True:
-                conv_kernel = tf.get_variable('stage_1/stage_heatmap/kernel')
-                conv_bias = tf.get_variable('stage_1/stage_heatmap/bias')
+                conv_kernel = tf.get_variable('stage_1/stage_heatmap/weights')
+                conv_bias = tf.get_variable('stage_1/stage_heatmap/biases')
 
                 loaded_kernel = weights['conv6_2_CPM']
                 loaded_bias = weights['conv6_2_CPM_b']
@@ -211,8 +211,8 @@ class CPM_Model(object):
                 ## stage 2 and behind
                 for stage in range(2, self.stages + 1):
                     for layer in range(1, 8):
-                        conv_kernel = tf.get_variable('stage_' + str(stage) + '/mid_conv' + str(layer) + '/kernel')
-                        conv_bias = tf.get_variable('stage_' + str(stage) + '/mid_conv' + str(layer) + '/bias')
+                        conv_kernel = tf.get_variable('stage_' + str(stage) + '/mid_conv' + str(layer) + '/weights')
+                        conv_bias = tf.get_variable('stage_' + str(stage) + '/mid_conv' + str(layer) + '/biases')
 
                         loaded_kernel = weights['Mconv' + str(layer) + '_stage' + str(stage)]
                         loaded_bias = weights['Mconv' + str(layer) + '_stage' + str(stage) + '_b']
