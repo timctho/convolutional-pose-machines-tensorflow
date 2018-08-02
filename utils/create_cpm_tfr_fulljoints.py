@@ -1,11 +1,12 @@
 import cv2
-import utils
+import cpm_utils
 import numpy as np
 import math
 import tensorflow as tf
 import time
 import random
 import os
+
 
 tfr_file = 'cpm_sample_dataset.tfrecords'
 dataset_dir = ''
@@ -92,7 +93,7 @@ for person_dir in os.listdir(dataset_dir):
             cur_hand_joints_x = map(lambda x: x * scale, cur_hand_joints_x)
             cur_hand_joints_y = map(lambda x: x * scale, cur_hand_joints_y)
 
-            # Resize image
+            # Resize image 
             image = cv2.resize(cur_img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4)
             offset = image.shape[1] % 2
 
@@ -111,13 +112,15 @@ for person_dir in os.listdir(dataset_dir):
                     cv2.circle(output_image, (int(cur_hand_joints_x[i]), int(cur_hand_joints_y[i])), 3, (0, 255, 0), 2)
 
                     # Generate joint gaussian map
-                    part_heatmap = utils.make_gaussian(output_image.shape[0], gaussian_radius,
-                                                       [cur_hand_joints_x[i], cur_hand_joints_y[i]])
+                    part_heatmap= cpm_utils.gaussian_img(box_size,box_size,cur_hand_joints_x[i],cur_hand_joints_y[i],1)
+                    #part_heatmap = utils.make_gaussian(output_image.shape[0], gaussian_radius,
+                     #                                  [cur_hand_joints_x[i], cur_hand_joints_y[i]])
                     hmap += part_heatmap * 50
             else:
                 for i in range(num_of_joints):
-                    output_heatmaps[:, :, i] = utils.make_gaussian(box_size, gaussian_radius,
-                                                                   [cur_hand_joints_x[i], cur_hand_joints_y[i]])
+                    #output_heatmaps[:, :, i] = utils.make_gaussian(box_size, gaussian_radius,
+                    #                                               [cur_hand_joints_x[i], cur_hand_joints_y[i]])
+                    output_heatmaps[:, :, i]= cpm_utils.gaussian_img(box_size,box_size,cur_hand_joints_x[i],cur_hand_joints_y[i],1)
 
         else:
             scale = box_size / (cur_img.shape[1] * 1.0)
